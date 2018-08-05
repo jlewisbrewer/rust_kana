@@ -2,8 +2,8 @@
 
 // Kana Transliterator
 
-// Takes a string input and converts it to a Japanese hiragana or katakana
-// output
+// Takes a string input in the Latin 1 character set and converts 
+//it to a Japanese hiragana or katakana output
 
 
 
@@ -14,7 +14,6 @@ struct Kana {
 }
 
 impl Kana {
-    // A new kana struct will be initilized with a hiragana hashmap
     fn new() -> Kana {
         let mut hiragana_table = HashMap::new();
     
@@ -34,7 +33,10 @@ impl Kana {
                 syllabary.push(format!("{}{}", c,v));
             }
         }
+        // Final n
         syllabary.push("n".to_string());
+        // This is the flag for gemination
+        syllabary.push("g".to_string());
     
 
         // A listing of the unicode values for hiragana
@@ -69,8 +71,11 @@ impl Kana {
                         // bilabial approximant
                         "\u{308F}", "\u{3090}", "NOT USED", "\u{3090}", "\u{3091}",
                         // final nasal
-                        "\u{3093}"];
-    
+                        "\u{3093}",
+                        // small tsu for geminates
+                        "\u{3063}"];
+                        
+                        
         let mut u_iter = unicodekeys.iter();
         let mut s_iter = syllabary.iter();
         for s in &syllabary {
@@ -82,18 +87,17 @@ impl Kana {
     }
 }
 
-// Converts and input string to a hiragana output
 fn to_hiragana(input : &str, table: &Kana) -> String {
     let mut output = "".to_string();
     
     let input = input.to_lowercase();
     let mut syllables = Vec::new();
     let vowels = vec!['a', 'e', 'i', 'o', 'u'];
+    let geminates = vec!['k', 't', 'p', 'g', 'd', 'b', 's', 'z'];
     let mut tempsyllable = "".to_string();
     let mut prevnasal = false;
-
+    let mut prevgeminate = false;
     for c in input.chars(){
-        
         tempsyllable.push(c);
         if c == 'n'{
             prevnasal = true;
@@ -103,11 +107,29 @@ fn to_hiragana(input : &str, table: &Kana) -> String {
             tempsyllable = "".to_string();
             tempsyllable.push(c);
         }
+        if geminates.contains(&c){
+            prevgeminate = true;
+            syllables.push(c.to_string());
+        }
+        if !vowels.contains(&c) && prevgeminate{
+            prevgeminate = true;
+            let tempchar = syllables.pop().unwrap();
+  
+            if tempchar == c.to_string() {
+                tempsyllable = "".to_string();
+                syllables.push("g".to_string());
+                tempsyllable.push(c);
+            }
+        }
         if vowels.contains(&c){
+            if prevgeminate {
+                syllables.pop();
+            }
             if prevnasal {
                 syllables.pop();
                 prevnasal = false;
             }
+            prevgeminate = false;
             syllables.push(tempsyllable);
             tempsyllable = "".to_string();
         }
@@ -168,4 +190,10 @@ fn test_hiragana_closed_final_syllable() {
 fn test_hiragana_closed_syllables() {
     let test_table = Kana::new();
     assert_eq!("はんど", to_hiragana("hando", &test_table));
+}
+
+#[test]
+fn test_hiragana_geminates() {
+    let test_table = Kana::new();
+    assert_eq!("がっこう", to_hiragana("gakkou", &test_table));
 }
