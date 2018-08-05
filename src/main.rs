@@ -34,8 +34,8 @@ impl Kana {
                 syllabary.push(format!("{}{}", c,v));
             }
         }
-
-        
+        syllabary.push("n".to_string());
+    
 
         // A listing of the unicode values for hiragana
         let unicodekeys = [ // vowels
@@ -55,7 +55,7 @@ impl Kana {
                         // alveolar nasals
                         "\u{306A}", "\u{306B}", "\u{306C}", "\u{306D}", "\u{306E}",
                         // voiceless glottal fricative
-                        "\u{306F}", "\u{3072}", "\u{3075}", "\u{3078}", "\u{307A}",
+                        "\u{306F}", "\u{3072}", "\u{3075}", "\u{3078}", "\u{307B}",
                         // voiced bilabial stop
                         "\u{3070}", "\u{3073}", "\u{3076}", "\u{3079}", "\u{307C}",
                         // voiceless bilabial stop
@@ -67,7 +67,9 @@ impl Kana {
                         // lateral flap
                         "\u{3089}", "\u{308A}", "\u{308B}", "\u{308C}", "\u{308D}",
                         // bilabial approximant
-                        "\u{308F}", "\u{3090}", "NOT USED", "\u{3090}", "\u{3091}"];
+                        "\u{308F}", "\u{3090}", "NOT USED", "\u{3090}", "\u{3091}",
+                        // final nasal
+                        "\u{3093}"];
     
         let mut u_iter = unicodekeys.iter();
         let mut s_iter = syllabary.iter();
@@ -80,10 +82,63 @@ impl Kana {
     }
 }
 
+// Converts and input string to a hiragana output
+fn to_hiragana(input : &str, table: &Kana) -> String {
+    let mut output = "".to_string();
+    
+    let input = input.to_lowercase();
+    let mut syllables = Vec::new();
+    let vowels = ['a', 'e', 'i', 'o', 'u'];
+    let mut tempsyllable = "".to_string();
+    for c in input.chars(){
+    tempsyllable.push(c);
+    for v in &vowels {
+        if c == *v {
+            syllables.push(tempsyllable);
+            tempsyllable = "".to_string();
+            }
+        }
+    }    
+
+    for c in &syllables {
+        let temp = c.to_string();
+        for (english, kana) in &table.hiragana {
+            if &temp == english {
+                output.push_str(&kana);
+            }
+        }
+    }
+    output
+}
 
 fn main() {
     let kanatable = Kana::new();
 
     println!("{:?}", kanatable.hiragana);
 
+}
+
+
+#[test]
+fn test_hiragana_vowel_inputs(){
+    let test_table = Kana::new();
+    assert_eq!("あえいおう", to_hiragana("aeiou", &test_table)); 
+}
+
+#[test]
+fn test_hiragana_capital_vowel_inputs(){
+    let test_table = Kana::new();
+    assert_eq!("おう", to_hiragana("OU", &test_table));
+}
+
+#[test]
+fn test_hiragana_open_syllables() {
+    let test_table = Kana::new();
+    assert_eq!("きつね", to_hiragana("kitune", &test_table));
+}
+
+#[test]
+fn test_hiragana_capital_open_syllables() {
+    let test_table = Kana::new();
+    assert_eq!("きつね", to_hiragana("KiTuNE", &test_table));
 }
