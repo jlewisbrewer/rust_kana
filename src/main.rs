@@ -89,16 +89,26 @@ impl Kana {
 
 fn to_hiragana(input : &str, table: &Kana) -> String {
     let mut output = "".to_string();
-    
     let input = input.to_lowercase();
+
+    // This vector is used to store the syllables for the input string
     let mut syllables = Vec::new();
+    // Vowel vector for comparison
     let vowels = vec!['a', 'e', 'i', 'o', 'u'];
+    // Possible geminate characters
     let geminates = vec!['k', 't', 'p', 'g', 'd', 'b', 's', 'z'];
+    
     let mut tempsyllable = "".to_string();
     let mut prevnasal = false;
     let mut prevgeminate = false;
     for c in input.chars(){
         tempsyllable.push(c);
+
+        // This check adds non-alphabetic chars to the syllable vector.
+        if !c.is_alphabetic(){
+            syllables.push(c.to_string());
+        }
+        // Japanese syllables can end in final -n, so it needs to be checked.
         if c == 'n'{
             prevnasal = true;
             syllables.push(c.to_string());
@@ -107,6 +117,7 @@ fn to_hiragana(input : &str, table: &Kana) -> String {
             tempsyllable = "".to_string();
             tempsyllable.push(c);
         }
+        // This checks the geminate array and sets geminate flag to test for gemination.
         if geminates.contains(&c){
             prevgeminate = true;
             syllables.push(c.to_string());
@@ -136,8 +147,14 @@ fn to_hiragana(input : &str, table: &Kana) -> String {
 
     }    
     //println!("{:?}", &syllables);
-    for c in &syllables {
+
+    // After the syllables have been parsed, we can get the kana values for them
+     for c in &syllables {
         let temp = c.to_string();
+        let mut tempchar = c.chars();
+        if !tempchar.next().unwrap().is_alphabetic(){
+            output.push_str(&temp);
+        }
         for (english, kana) in &table.hiragana {
             if &temp == english {
                 output.push_str(&kana);
@@ -196,4 +213,10 @@ fn test_hiragana_closed_syllables() {
 fn test_hiragana_geminates() {
     let test_table = Kana::new();
     assert_eq!("がっこう", to_hiragana("gakkou", &test_table));
+}
+
+#[test]
+fn test_multiple_words_with_whitespace(){
+    let test_table = Kana::new();
+    assert_eq!("おはよう ございます !", to_hiragana("ohayou gozaimasu !", &test_table));
 }
