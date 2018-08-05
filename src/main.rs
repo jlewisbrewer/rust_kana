@@ -88,18 +88,32 @@ fn to_hiragana(input : &str, table: &Kana) -> String {
     
     let input = input.to_lowercase();
     let mut syllables = Vec::new();
-    let vowels = ['a', 'e', 'i', 'o', 'u'];
+    let vowels = vec!['a', 'e', 'i', 'o', 'u'];
     let mut tempsyllable = "".to_string();
+    let mut prevnasal = false;
+
     for c in input.chars(){
-    tempsyllable.push(c);
-    for v in &vowels {
-        if c == *v {
+        
+        tempsyllable.push(c);
+        if c == 'n'{
+            prevnasal = true;
+            syllables.push(c.to_string());
+        } else if !vowels.contains(&c) && prevnasal {
+            prevnasal = false;
+            tempsyllable = "".to_string();
+            tempsyllable.push(c);
+        }
+        if vowels.contains(&c){
+            if prevnasal {
+                syllables.pop();
+                prevnasal = false;
+            }
             syllables.push(tempsyllable);
             tempsyllable = "".to_string();
-            }
         }
-    }    
 
+    }    
+    //println!("{:?}", &syllables);
     for c in &syllables {
         let temp = c.to_string();
         for (english, kana) in &table.hiragana {
@@ -111,6 +125,7 @@ fn to_hiragana(input : &str, table: &Kana) -> String {
     output
 }
 
+
 fn main() {
     let kanatable = Kana::new();
 
@@ -120,13 +135,13 @@ fn main() {
 
 
 #[test]
-fn test_hiragana_vowel_inputs(){
+fn test_hiragana_vowel_inputs() {
     let test_table = Kana::new();
     assert_eq!("あえいおう", to_hiragana("aeiou", &test_table)); 
 }
 
 #[test]
-fn test_hiragana_capital_vowel_inputs(){
+fn test_hiragana_capital_vowel_inputs() {
     let test_table = Kana::new();
     assert_eq!("おう", to_hiragana("OU", &test_table));
 }
@@ -141,4 +156,16 @@ fn test_hiragana_open_syllables() {
 fn test_hiragana_capital_open_syllables() {
     let test_table = Kana::new();
     assert_eq!("きつね", to_hiragana("KiTuNE", &test_table));
+}
+
+#[test]
+fn test_hiragana_closed_final_syllable() {
+    let test_table = Kana::new();
+    assert_eq!("ごおん", to_hiragana("goon", &test_table));
+}
+
+#[test]
+fn test_hiragana_closed_syllables() {
+    let test_table = Kana::new();
+    assert_eq!("はんど", to_hiragana("hando", &test_table));
 }
