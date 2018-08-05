@@ -22,6 +22,11 @@ impl Kana {
         // Japanese consonants
         let consonants = ["k", "g", "s", "z", "t", "d", "n", "h",
                         "b", "p", "m", "y", "r", "w"];
+                        
+        // Japanese digraphs
+        let digraphs_vowels = ["a", "u", "o"];
+        let digraph_consonants = ["ky", "sh", "ch", "ny", "hy", 
+                        "my", "ry", "gy", "j", "by", "py"];
     
     
         let mut syllabary = Vec::new();
@@ -31,6 +36,11 @@ impl Kana {
         for c in &consonants {
             for v in &vowels {
                 syllabary.push(format!("{}{}", c,v));
+            }
+        }
+        for c in &digraph_consonants {
+            for v in &digraphs_vowels {
+                syllabary.push(format!("{}{}", c, v));
             }
         }
         // Final n
@@ -70,6 +80,28 @@ impl Kana {
                         "\u{3089}", "\u{308A}", "\u{308B}", "\u{308C}", "\u{308D}",
                         // bilabial approximant
                         "\u{308F}", "\u{3090}", "NOT USED", "\u{3090}", "\u{3091}",
+                        // voiceless velar stop digraph
+                        "\u{304D}\u{3083}",   "\u{304D}\u{3085}",  "\u{304D}\u{3087}",
+                        // voiceless alveolar sibilant digraph
+                         "\u{3057}\u{3083}",  "\u{3057}\u{3085}",  "\u{3057}\u{3087}",
+                        // voiceless alveolar affricate digraph
+                         "\u{3061}\u{3083}",  "\u{3061}\u{3085}",  "\u{3061}\u{3087}",
+                        // alveolar nasal digraph
+                         "\u{306B}\u{3083}",  "\u{306B}\u{3085}",  "\u{306B}\u{3087}", 
+                        // voiceless glottal aproximant digraph
+                         "\u{3072}\u{3083}",  "\u{3072}\u{3085}",  "\u{3072}\u{3087}",
+                        // bilabial nasal digraph
+                         "\u{307F}\u{3083}",  "\u{307F}\u{3085}",  "\u{307F}\u{3087}",
+                        // lateral approximant digraph
+                         "\u{308A}\u{3083}",  "\u{308A}\u{3085}",  "\u{308A}\u{3087}",
+                        // voiced velar stop digraph
+                         "\u{304E}\u{3083}",  "\u{304E}\u{3085}",  "\u{304E}\u{3087}",
+                        // voiced alveolar affricate digraph
+                         "\u{3058}\u{3083}",  "\u{3058}\u{3085}",  "\u{3058}\u{3087}",
+                        // voiced bilabial stop digraph
+                         "\u{3073}\u{3083}",  "\u{3073}\u{3085}",  "\u{3073}\u{3087}",
+                        // voiceless bilabial stop digraph
+                         "\u{3074}\u{3083}",  "\u{3074}\u{3085}",  "\u{3074}\u{3087}",
                         // final nasal
                         "\u{3093}",
                         // small tsu for geminates
@@ -97,16 +129,22 @@ fn to_hiragana(input : &str, table: &Kana) -> String {
     let vowels = vec!['a', 'e', 'i', 'o', 'u'];
     // Possible geminate characters
     let geminates = vec!['k', 't', 'p', 'g', 'd', 'b', 's', 'z'];
+    let digraph = vec!["ky", "sh", "ch", "nq", "hy", 
+                        "my", "ry", "gy", "by", "py"];
     
     let mut tempsyllable = "".to_string();
+    let mut tempdigraph = "".to_string();
     let mut prevnasal = false;
     let mut prevgeminate = false;
+
     for c in input.chars(){
         tempsyllable.push(c);
+        tempdigraph.push(c);
 
         // This check adds non-alphabetic chars to the syllable vector.
         if !c.is_alphabetic(){
             syllables.push(c.to_string());
+            tempsyllable = "".to_string();
         }
         // Japanese syllables can end in final -n, so it needs to be checked.
         if c == 'n'{
@@ -118,24 +156,35 @@ fn to_hiragana(input : &str, table: &Kana) -> String {
             tempsyllable.push(c);
         }
         // This checks the geminate array and sets geminate flag to test for gemination.
-        if geminates.contains(&c){
-            prevgeminate = true;
-            syllables.push(c.to_string());
-        }
         if !vowels.contains(&c) && prevgeminate{
-            prevgeminate = true;
+
             let tempchar = syllables.pop().unwrap();
+
   
             if tempchar == c.to_string() {
                 tempsyllable = "".to_string();
                 syllables.push("g".to_string());
                 tempsyllable.push(c);
+                prevgeminate = false;
             }
         }
+        if geminates.contains(&c){
+            prevgeminate = true;
+            syllables.push(c.to_string());
+        }
+
+        // This checks to see if it's a digraph
+        if digraph.contains(&tempdigraph.as_str()){
+            tempsyllable = "".to_string();
+            tempsyllable.push_str(&tempdigraph);
+            prevgeminate = false;
+        }
+
         if vowels.contains(&c){
             if prevgeminate {
                 syllables.pop();
             }
+  
             if prevnasal {
                 syllables.pop();
                 prevnasal = false;
@@ -144,7 +193,11 @@ fn to_hiragana(input : &str, table: &Kana) -> String {
             syllables.push(tempsyllable);
             tempsyllable = "".to_string();
         }
-
+        
+        if tempdigraph.len() == 2 {
+            tempdigraph = "".to_string();
+            tempdigraph.push(c);
+        }
     }    
     //println!("{:?}", &syllables);
 
@@ -219,4 +272,10 @@ fn test_hiragana_geminates() {
 fn test_multiple_words_with_whitespace(){
     let test_table = Kana::new();
     assert_eq!("おはよう ございます !", to_hiragana("ohayou gozaimasu !", &test_table));
+}
+
+#[test]
+fn test_hiragana_digraphs(){
+    let test_table = Kana::new();
+    assert_eq!("がっこう で いっしょうに", to_hiragana("gakkou de isshouni", &test_table));
 }
