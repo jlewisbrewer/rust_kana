@@ -1,0 +1,6 @@
+[package]
+name = "to_kana"
+version = "0.1.0"
+authors = ["jlewisbrewer <jbrewer@pdx.edu>"]
+
+[dependencies]
