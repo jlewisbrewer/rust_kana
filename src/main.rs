@@ -114,6 +114,11 @@ impl Kana {
             hiragana_table.insert(s_iter.next().unwrap().to_string(), u_iter.next().unwrap().to_string());
         }
 
+        // These syllables are phonologically possible but do not have associated kana.
+        hiragana_table.remove("yi");
+        hiragana_table.remove("ye");
+        hiragana_table.remove("wu");
+
     
         Kana{hiragana: hiragana_table}
     }
@@ -128,7 +133,8 @@ fn to_hiragana(input : &str, table: &Kana) -> String {
     // Vowel vector for comparison
     let vowels = vec!['a', 'e', 'i', 'o', 'u'];
     // Possible geminate characters
-    let geminates = vec!['k', 't', 'p', 'g', 'd', 'b', 's', 'z'];
+    let geminates = vec!['k', 't', 'p', 'g', 'd', 'b', 's', 'z', 'c'];
+    // Possible digraphs
     let digraph = vec!["ky", "sh", "ch", "nq", "hy", 
                         "my", "ry", "gy", "by", "py"];
     
