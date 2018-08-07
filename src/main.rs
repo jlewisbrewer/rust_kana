@@ -7,15 +7,23 @@
 
 
 
+#[macro_use]
+extern crate lazy_static; // 1.0.2
+
+
 use std::collections::HashMap;
 
-struct Kana {
-    hiragana : HashMap<String, String>
+lazy_static!{
+    static ref hiragana : HashMap<String, String> = {
+        initialize_hiragana()
+    };
 }
 
-impl Kana {
-    fn new() -> Kana {
-        let mut hiragana_table = HashMap::new();
+
+// Function to create a hashmap mapping latin strings to 
+// unicode hiragana strings.
+fn initialize_hiragana() -> HashMap<String, String> {
+    let mut hiragana_table = HashMap::new();
     
         // Japanese vowels
         let vowels = ["a", "i", "u", "e", "o"];
@@ -110,7 +118,7 @@ impl Kana {
                         
         let mut u_iter = unicodekeys.iter();
         let mut s_iter = syllabary.iter();
-        for s in &syllabary {
+        for _s in &syllabary {
             hiragana_table.insert(s_iter.next().unwrap().to_string(), u_iter.next().unwrap().to_string());
         }
 
@@ -118,14 +126,11 @@ impl Kana {
         hiragana_table.remove("yi");
         hiragana_table.remove("ye");
         hiragana_table.remove("wu");
-
-    
-        Kana{hiragana: hiragana_table}
-    }
+        
+        hiragana_table
 }
 
-fn to_hiragana(input : &str, table: &Kana) -> String {
-    let mut output = "".to_string();
+fn to_japanese_syllables(input: &str) -> Vec<String> {
     let input = input.to_lowercase();
 
     // This vector is used to store the syllables for the input string
@@ -205,83 +210,76 @@ fn to_hiragana(input : &str, table: &Kana) -> String {
             tempdigraph.push(c);
         }
     }    
-    //println!("{:?}", &syllables);
+    println!("{:?}", &syllables);
+    syllables
+}
 
+fn to_hiragana(input : &str) -> String {
+    let mut output = "".to_string();
+    let syllables = to_japanese_syllables(input);
     // After the syllables have been parsed, we can get the kana values for them
      for c in &syllables {
         let temp = c.to_string();
         let mut tempchar = c.chars();
         if !tempchar.next().unwrap().is_alphabetic(){
             output.push_str(&temp);
-        }
-        for (english, kana) in &table.hiragana {
-            if &temp == english {
-                output.push_str(&kana);
-            }
+        } else {
+            output.push_str(hiragana.get(&temp).unwrap());
         }
     }
     output
 }
 
 
-fn main() {
-    let kanatable = Kana::new();
 
-    println!("{:?}", kanatable.hiragana);
+fn main() {
+
+    println!("{:?}", *hiragana);
 
 }
 
 
 #[test]
 fn test_hiragana_vowel_inputs() {
-    let test_table = Kana::new();
-    assert_eq!("あえいおう", to_hiragana("aeiou", &test_table)); 
+    assert_eq!("あえいおう", to_hiragana("aeiou")); 
 }
 
 #[test]
 fn test_hiragana_capital_vowel_inputs() {
-    let test_table = Kana::new();
-    assert_eq!("おう", to_hiragana("OU", &test_table));
+    assert_eq!("おう", to_hiragana("OU"));
 }
 
 #[test]
 fn test_hiragana_open_syllables() {
-    let test_table = Kana::new();
-    assert_eq!("きつね", to_hiragana("kitune", &test_table));
+    assert_eq!("きつね", to_hiragana("kitune"));
 }
 
 #[test]
 fn test_hiragana_capital_open_syllables() {
-    let test_table = Kana::new();
-    assert_eq!("きつね", to_hiragana("KiTuNE", &test_table));
+    assert_eq!("きつね", to_hiragana("KiTuNE"));
 }
 
 #[test]
 fn test_hiragana_closed_final_syllable() {
-    let test_table = Kana::new();
-    assert_eq!("ごおん", to_hiragana("goon", &test_table));
+    assert_eq!("ごおん", to_hiragana("goon"));
 }
 
 #[test]
 fn test_hiragana_closed_syllables() {
-    let test_table = Kana::new();
-    assert_eq!("はんど", to_hiragana("hando", &test_table));
+    assert_eq!("はんど", to_hiragana("hando"));
 }
 
 #[test]
 fn test_hiragana_geminates() {
-    let test_table = Kana::new();
-    assert_eq!("がっこう", to_hiragana("gakkou", &test_table));
+    assert_eq!("がっこう", to_hiragana("gakkou"));
 }
 
 #[test]
 fn test_multiple_words_with_whitespace(){
-    let test_table = Kana::new();
-    assert_eq!("おはよう ございます !", to_hiragana("ohayou gozaimasu !", &test_table));
+    assert_eq!("おはよう ございます !", to_hiragana("ohayou gozaimasu !"));
 }
 
 #[test]
 fn test_hiragana_digraphs(){
-    let test_table = Kana::new();
-    assert_eq!("がっこう で いっしょうに", to_hiragana("gakkou de isshouni", &test_table));
+    assert_eq!("がっこう で いっしょうに", to_hiragana("gakkou de isshouni"));
 }
