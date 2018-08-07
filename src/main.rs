@@ -10,7 +10,7 @@
 #[macro_use]
 extern crate lazy_static; // 1.0.2
 
-
+use std::env;
 use std::collections::HashMap;
 
 lazy_static!{
@@ -20,7 +20,7 @@ lazy_static!{
 }
 
 
-// Function to create a hashmap mapping latin strings to 
+// Function to create a hashmap mapping latin  1 strings to 
 // unicode hiragana strings.
 fn initialize_hiragana() -> HashMap<String, String> {
     let mut hiragana_table = HashMap::new();
@@ -33,7 +33,7 @@ fn initialize_hiragana() -> HashMap<String, String> {
                         
         // Japanese digraphs
         let digraphs_vowels = ["a", "u", "o"];
-        let digraph_consonants = ["ky", "sh", "ch", "ny", "hy", 
+        let digraph_consonants = ["ky", "sh", "ch", "nq", "hy", 
                         "my", "ry", "gy", "j", "by", "py"];
     
     
@@ -99,7 +99,7 @@ fn initialize_hiragana() -> HashMap<String, String> {
                         // lateral flap
                         "\u{3089}", "\u{308A}", "\u{308B}", "\u{308C}", "\u{308D}",
                         // bilabial approximant
-                        "\u{308F}", "\u{3090}", "NOT USED", "\u{3090}", "\u{3091}",
+                        "\u{308F}", "\u{3090}", "NOT USED", "\u{3091}", "\u{3092}",
                         // voiceless velar stop digraph
                         "\u{304D}\u{3083}",   "\u{304D}\u{3085}",  "\u{304D}\u{3087}",
                         // voiceless alveolar sibilant digraph
@@ -142,6 +142,8 @@ fn initialize_hiragana() -> HashMap<String, String> {
         hiragana_table
 }
 
+// This function takes a string input and then converts it to 
+// a vector of strings to imitate Japanese syllables.
 fn to_japanese_syllables(input: &str) -> Vec<String> {
     let input = input.to_lowercase();
 
@@ -166,8 +168,24 @@ fn to_japanese_syllables(input: &str) -> Vec<String> {
 
         // This check adds non-alphabetic chars to the syllable vector.
         if !c.is_alphabetic(){
+            prevnasal = false;
             syllables.push(c.to_string());
             tempsyllable = "".to_string();
+        }
+        
+        // This checks to see if it's a digraph
+        if digraph.contains(&tempdigraph.as_str()){
+            if prevgeminate{
+                syllables.pop();
+                prevgeminate = false;
+            }
+            if prevnasal{
+                syllables.pop();
+                prevnasal = false;
+            }
+            tempsyllable = "".to_string();
+            tempsyllable.push_str(&tempdigraph);
+            prevgeminate = false;
         }
         // Japanese syllables can end in final -n, so it needs to be checked.
         if c == 'n'{
@@ -189,6 +207,8 @@ fn to_japanese_syllables(input: &str) -> Vec<String> {
                 syllables.push("g".to_string());
                 tempsyllable.push(c);
                 prevgeminate = false;
+                continue;
+
             }
         }
         if geminates.contains(&c){
@@ -196,12 +216,6 @@ fn to_japanese_syllables(input: &str) -> Vec<String> {
             syllables.push(c.to_string());
         }
 
-        // This checks to see if it's a digraph
-        if digraph.contains(&tempdigraph.as_str()){
-            tempsyllable = "".to_string();
-            tempsyllable.push_str(&tempdigraph);
-            prevgeminate = false;
-        }
 
         if vowels.contains(&c){
             if prevgeminate {
@@ -222,10 +236,12 @@ fn to_japanese_syllables(input: &str) -> Vec<String> {
             tempdigraph.push(c);
         }
     }    
-    println!("{:?}", &syllables);
+    //println!("{:?}", &syllables);
     syllables
 }
 
+// This function takes an input string and returns
+// a hiragana output string.
 fn to_hiragana(input : &str) -> String {
     let mut output = "".to_string();
     let syllables = to_japanese_syllables(input);
@@ -246,7 +262,11 @@ fn to_hiragana(input : &str) -> String {
 
 fn main() {
 
-    println!("{:?}", *hiragana);
+    
+    let args: Vec<String> = env::args().collect();
+
+
+    println!("{:?}", to_hiragana(&args[1]));
 
 }
 
