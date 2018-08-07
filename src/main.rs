@@ -55,6 +55,18 @@ fn initialize_hiragana() -> HashMap<String, String> {
         syllabary.push("n".to_string());
         // This is the flag for gemination
         syllabary.push("g".to_string());
+        // There are a number of syllables that are transcribed differently by 
+        // convention. This loop is designed to find their phonemic representations 
+        // and replace them. The iter is sourced from stack overflow,
+        // https://stackoverflow.com/questions/30558246/how-do-i-find-the-index-of-an-element-in-an-array-vector-or-slice
+        // posted by Mathieu David.
+        let to_replace = ["si", "ti", "tu", "hu", "zi"];
+        let replace_with = ["shi", "chi", "tsu", "fu", "ji"];
+        for i in 0..5 {
+            let syllable = to_replace[i];
+            let index = syllabary.iter().position(|r| r == &syllable.to_string()).unwrap();
+            syllabary[index] = replace_with[i].to_string();
+        }
     
 
         // A listing of the unicode values for hiragana
@@ -251,12 +263,12 @@ fn test_hiragana_capital_vowel_inputs() {
 
 #[test]
 fn test_hiragana_open_syllables() {
-    assert_eq!("きつね", to_hiragana("kitune"));
+    assert_eq!("きつね", to_hiragana("kitsune"));
 }
 
 #[test]
 fn test_hiragana_capital_open_syllables() {
-    assert_eq!("きつね", to_hiragana("KiTuNE"));
+    assert_eq!("きつね", to_hiragana("KiTsuNE"));
 }
 
 #[test]
