@@ -4,9 +4,6 @@
 
 // Takes a string input in the Latin 1 character set and converts 
 //it to a Japanese hiragana or katakana output
-
-
-
 #[macro_use]
 extern crate lazy_static; // 1.0.2
 
@@ -17,14 +14,16 @@ lazy_static!{
     static ref hiragana : HashMap<String, String> = {
         initialize_hiragana()
     };
+    static ref katakana: HashMap<String, String> = {
+        initialize_katakana()
+    };
 }
 
 
-// Function to create a hashmap mapping latin  1 strings to 
-// unicode hiragana strings.
-fn initialize_hiragana() -> HashMap<String, String> {
-    let mut hiragana_table = HashMap::new();
-    
+// Function to create a vector that contains all Japanese
+// syllables.
+fn initialize_japanese_syllables() -> Vec<String> {
+
         // Japanese vowels
         let vowels = ["a", "i", "u", "e", "o"];
         // Japanese consonants
@@ -55,6 +54,7 @@ fn initialize_hiragana() -> HashMap<String, String> {
         syllabary.push("n".to_string());
         // This is the flag for gemination
         syllabary.push("g".to_string());
+        
         // There are a number of syllables that are transcribed differently by 
         // convention. This loop is designed to find their phonemic representations 
         // and replace them. The iter is sourced from stack overflow,
@@ -67,8 +67,17 @@ fn initialize_hiragana() -> HashMap<String, String> {
             let index = syllabary.iter().position(|r| r == &syllable.to_string()).unwrap();
             syllabary[index] = replace_with[i].to_string();
         }
+    syllabary
     
+}
 
+// Function that map Japanese syllables to corresponding hiragana
+// values.
+fn initialize_hiragana() -> HashMap<String, String> {
+        let mut hiragana_table = HashMap::new();
+
+        let syllabary = initialize_japanese_syllables();
+ 
         // A listing of the unicode values for hiragana
         let unicodekeys = [ // vowels
                         "\u{3042}", "\u{3044}", "\u{3046}", "\u{3048}", "\u{304A}",
@@ -140,6 +149,85 @@ fn initialize_hiragana() -> HashMap<String, String> {
         hiragana_table.remove("wu");
         
         hiragana_table
+}
+
+
+fn initialize_katakana() -> HashMap<String, String> {
+        let mut katakana_table = HashMap::new();
+
+        let syllabary = initialize_japanese_syllables();
+ 
+        // A listing of the unicode values for hiragana
+        let unicodekeys = [ // vowels
+                        "\u{30A2}", "\u{30A4}", "\u{30A6}", "\u{30A8}", "\u{30AA}",
+                        // voiceless velar stops
+                        "\u{30AB}", "\u{30AD}", "\u{30AF}", "\u{30B1}", "\u{30B3}",
+                        // voiced velar stops
+                        "\u{30AC}", "\u{30AE}", "\u{30B0}", "\u{30B2}", "\u{30B4}",
+                        // voiceless alveolar sibilants
+                        "\u{30B5}", "\u{30B7}", "\u{30B9}", "\u{30BB}", "\u{30BD}",
+                        // voiced alveolar sibilants
+                        "\u{30B6}", "\u{30B8}", "\u{30BA}", "\u{30BC}", "\u{30BE}",
+                        // voiceless alveolar stops
+                        "\u{30BF}", "\u{30C1}", "\u{30C4}", "\u{30C6}", "\u{30C8}",
+                        // voiced alveolar stops
+                        "\u{30C0}", "\u{30C2}", "\u{30C5}", "\u{30C7}", "\u{30C9}",
+                        // alveolar nasals
+                        "\u{30CA}", "\u{30CB}", "\u{30CC}", "\u{30CD}", "\u{30CE}",
+                        // voiceless glottal fricative
+                        "\u{30CF}", "\u{30D2}", "\u{30D5}", "\u{30D8}", "\u{30DB}",
+                        // voiced bilabial stop
+                        "\u{30D0}", "\u{30D3}", "\u{30D6}", "\u{30D9}", "\u{30DC}",
+                        // voiceless bilabial stop
+                        "\u{30D1}", "\u{30D4}", "\u{30D7}", "\u{30DA}", "\u{30DD}",
+                        // bilabila nasal
+                        "\u{30DE}", "\u{30DF}", "\u{30E0}", "\u{30E1}", "\u{30E2}",
+                        // palatal approximant
+                        "\u{30E4}", "NOT USED", "\u{30E6}", "NOT USED", "\u{30E8}",
+                        // lateral flap
+                        "\u{30E9}", "\u{30EA}", "\u{30EB}", "\u{30EC}", "\u{30ED}",
+                        // bilabial approximant
+                        "\u{30EF}", "\u{30F0}", "NOT USED", "\u{30F1}", "\u{30F2}",
+                        // voiceless velar stop digraph
+                        "\u{30AD}\u{30E3}",   "\u{30AD}\u{30E5}",  "\u{30AD}\u{30E7}",
+                        // voiceless alveolar sibilant digraph
+                         "\u{30B7}\u{30E3}",  "\u{30B7}\u{30E5}",  "\u{30B7}\u{30E7}",
+                        // voiceless alveolar affricate digraph
+                         "\u{30C1}\u{30E3}",  "\u{30C1}\u{30E5}",  "\u{30C1}\u{30E7}",
+                        // alveolar nasal digraph
+                         "\u{30CB}\u{30E3}",  "\u{30CB}\u{30E5}",  "\u{30CB}\u{30E7}", 
+                        // voiceless glottal aproximant digraph
+                         "\u{30D2}\u{30E3}",  "\u{30D2}\u{30E5}",  "\u{30D2}\u{30E7}",
+                        // bilabial nasal digraph
+                         "\u{30DF}\u{30E3}",  "\u{30DF}\u{30E5}",  "\u{30DF}\u{30E7}",
+                        // lateral approximant digraph
+                         "\u{30EA}\u{30E3}",  "\u{30EA}\u{30E5}",  "\u{30EA}\u{30E7}",
+                        // voiced velar stop digraph
+                         "\u{30AE}\u{30E3}",  "\u{30AE}\u{30E5}",  "\u{30AE}\u{30E7}",
+                        // voiced alveolar affricate digraph
+                         "\u{30B8}\u{30E3}",  "\u{30B8}\u{30E5}",  "\u{30B8}\u{30E7}",
+                        // voiced bilabial stop digraph
+                         "\u{30D3}\u{30E3}",  "\u{30D3}\u{30E5}",  "\u{30D3}\u{30E7}",
+                        // voiceless bilabial stop digraph
+                         "\u{30D4}\u{30E3}",  "\u{30D4}\u{30E5}",  "\u{30D4}\u{30E7}",
+                        // final nasal
+                        "\u{30F3}",
+                        // small tsu for geminates
+                        "\u{30C3}"];
+                        
+                        
+        let mut u_iter = unicodekeys.iter();
+        let mut s_iter = syllabary.iter();
+        for _s in &syllabary {
+            katakana_table.insert(s_iter.next().unwrap().to_string(), u_iter.next().unwrap().to_string());
+        }
+
+        // These syllables are phonologically possible but do not have associated kana.
+        katakana_table.remove("yi");
+        katakana_table.remove("ye");
+        katakana_table.remove("wu");
+        
+        katakana_table
 }
 
 // This function takes a string input and then converts it to 
@@ -258,6 +346,22 @@ fn to_hiragana(input : &str) -> String {
     output
 }
 
+fn to_katakana(input : &str) -> String {
+    let mut output = "".to_string();
+    let syllables = to_japanese_syllables(input);
+    // After the syllables have been parsed, we can get the kana values for them
+     for c in &syllables {
+        let temp = c.to_string();
+        let mut tempchar = c.chars();
+        if !tempchar.next().unwrap().is_alphabetic(){
+            output.push_str(&temp);
+        } else {
+            output.push_str(katakana.get(&temp).unwrap());
+        }
+    }
+    output
+}
+
 
 
 fn main() {
@@ -266,7 +370,8 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
 
-    println!("{:?}", to_hiragana(&args[1]));
+    println!("In hiragana: {:?}", to_hiragana(&args[1]));
+    println!("In katakana: {:?}", to_katakana(&args[1]));
 
 }
 
