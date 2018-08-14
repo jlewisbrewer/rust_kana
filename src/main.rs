@@ -1,17 +1,20 @@
-// Copyright 2018 Jason Brewer and Gavin Megson
+/// Copyright 2018 Jason Brewer and Gavin Megson
 
-// Kana Transliterator
+/// Kana Transliterator
+///
+/// Takes a string input in the Latin 1 character set and converts 
+/// it to a Japanese hiragana or katakana output.
 
-// Takes a string input in the Latin 1 character set and converts 
-//it to a Japanese hiragana or katakana output
 #[macro_use]
 extern crate lazy_static; // 1.0.2
 
 use std::env;
 use std::collections::HashMap;
+use std::process;
 
+/// Global constant hashmaps that map Latin 1 syllables to Japanese
+/// kana in unicode.
 lazy_static!{
-
     static ref HIRAGANA : HashMap<String, String> = {
         initialize_hiragana()
     };
@@ -20,9 +23,7 @@ lazy_static!{
     };
 }
 
-
-// Function to create a vector that contains all Japanese
-// syllables.
+/// Returns a vector of strings that represent Japanese syllables
 fn initialize_japanese_syllables() -> Vec<String> {
 
         // Japanese vowels
@@ -72,13 +73,13 @@ fn initialize_japanese_syllables() -> Vec<String> {
     
 }
 
-// Function that map Japanese syllables to corresponding hiragana
-// values.
+/// Returns a hashmap of Latin 1 strings as keys and Japanese
+/// hiragana strings as values.
 fn initialize_hiragana() -> HashMap<String, String> {
+
         let mut hiragana_table = HashMap::new();
 
         let syllabary = initialize_japanese_syllables();
-
 
         let unicodekeys = [ // vowels
                         "\u{3042}", "\u{3044}", "\u{3046}", "\u{3048}", "\u{304A}",
@@ -153,16 +154,19 @@ fn initialize_hiragana() -> HashMap<String, String> {
         hiragana_table
 }
 
+/// Returns a hashmap of Latin 1 strings as keys and Japanese
+/// katakana strings as values.
 fn initialize_katakana() -> HashMap<String, String> {
+
         let mut katakana_table = HashMap::new();
         
-
         let mut syllabary = initialize_japanese_syllables();
         
+        // This value is used to represent long vowels in order to map to the katakana
+        // choonpu kana.
         syllabary.push("l".to_string());
-        // A listing of the unicode values for hiragana
  
-        // A listing of the unicode values for hiragana
+        // A listing of the unicode values for katakana
         let unicodekeys = [ // vowels
                         "\u{30A2}", "\u{30A4}", "\u{30A6}", "\u{30A8}", "\u{30AA}",
                         // voiceless velar stops
@@ -237,17 +241,31 @@ fn initialize_katakana() -> HashMap<String, String> {
         katakana_table
 }
 
+/// Returns a vector of strings where each string represents a Japanese syllable
+///
+/// #Arguments
+/// 
+/// * `input` - A str slice that needs to be parsed into Japanese syllables
+///
+/// # Example
+///
+/// ```
+/// let test_input = "toto";
+/// assert_eq!(to_japanese_syllables(test_input), "["to", "to"]);
+/// ```
+///
 fn to_japanese_syllables(input: &str) -> Vec<String> {
+
     let input = input.to_lowercase();
 
     // This vector is used to store the syllables for the input string
     let mut syllables = Vec::new();
-    // Vowel vector for comparison
-    let vowels = vec!['a', 'e', 'i', 'o', 'u'];
+    // Vowel array for comparison
+    let vowels = ['a', 'e', 'i', 'o', 'u'];
     // Possible geminate characters
-    let geminates = vec!['k', 't', 'p', 'g', 'd', 'b', 's', 'z', 'c'];
+    let geminates = ['k', 't', 'p', 'g', 'd', 'b', 's', 'z', 'c'];
     // Possible digraphs
-    let digraph = vec!["ky", "sh", "ch", "nq", "hy", 
+    let digraph = ["ky", "sh", "ch", "nq", "hy", 
                         "my", "ry", "gy", "by", "py"];
     
     let mut tempsyllable = "".to_string();
@@ -323,16 +341,24 @@ fn to_japanese_syllables(input: &str) -> Vec<String> {
             tempsyllable = "".to_string();
         }
         
-        if tempdigraph.len() == 2 {
+        if tempdigraph.len() >= 2 {
             tempdigraph = "".to_string();
             tempdigraph.push(c);
         }
     }    
-    //println!("{:?}", &syllables);
     syllables
 }
 
-fn to_hiragana(input : &str) -> String {
+///  Returns a string in hiragana
+///
+/// # Arguments
+///
+/// * `input` - A string slice that will be converted to hiragana
+///
+///
+///
+///
+fn to_hiragana(input : &str) -> Result<String, String> {
     let mut output = "".to_string();
     let syllables = to_japanese_syllables(input);
     // After the syllables have been parsed, we can get the kana values for them
@@ -342,19 +368,31 @@ fn to_hiragana(input : &str) -> String {
         if !tempchar.next().unwrap().is_alphabetic(){
             output.push_str(&temp);
         } else {
-            output.push_str(HIRAGANA.get(&temp).unwrap());
+            let result = HIRAGANA.get(&temp);
+            match result {
+                Some(_) => output.push_str(result.unwrap()),
+                None => return Err("Unable to parse input".to_string()),
+            }
         }
     }
-    output
+    Ok(output)
 }
 
-fn to_katakana(input : &str) -> String {
+///  Returns a string in katakana
+///
+/// # Arguments
+///
+/// * `input` - A string slice that will be converted to katakana
+///
+///
+///
+///
+fn to_katakana(input : &str) -> Result<String, String> {
     let mut output = "".to_string();
     
     let syllables = to_japanese_syllables(input);
 
     let mut last_vowel = ' ';
-
     // After the syllables have been parsed, we can get the kana values for them
      for c in &syllables {
         let mut temp = c.to_string();
@@ -366,28 +404,17 @@ fn to_katakana(input : &str) -> String {
         if !c.chars().next().unwrap().is_alphabetic(){
             output.push_str(&temp);
         } else {
-            output.push_str(KATAKANA.get(&temp).unwrap());
+            let result = KATAKANA.get(&temp);
+            match result {
+                Some(_) => output.push_str(result.unwrap()),
+                None => return Err("Unable to parse input".to_string()),
+            }
         }
         last_vowel = c.chars().last().unwrap();
 
     }
-
-    output
+    Ok(output)
 }
-
-
-// fn to_roomaji(input : &str) -> String {
-//     let mut output = "".to_string();
-//     for c in input.chars() {
-//         for (key, value) in hiragana.iter(){
-//             if value.contains(c){
-//                 output.push_str(&key);
-//             }
-//         }
-//     }
-//     output
-// }
-
 
 
 fn main() {
@@ -395,55 +422,105 @@ fn main() {
     
     let args: Vec<String> = env::args().collect();
 
-
-    println!("In hiragana: {:?}", to_hiragana(&args[1]));
-    println!("In katakana: {:?}", to_katakana(&args[1]));
-    // println!("Roomaji from hiragana: {}", to_roomaji(&to_hiragana(&args[1])));
-
+    if args.len() != 3 {
+        println!("Incorrect number of command line arguemnts, please type README in command line for details");
+        process::exit(1);
+    } 
+    let option = &args[1];
+    match option.as_str() { 
+        "hiragana" => println!("{}", to_hiragana(&args[2]).unwrap()),
+        "katakana" => println!("{}", to_katakana(&args[2]).unwrap()),
+        _ => println!("Incorrect command line argument, please see README for details."),
+    }
 }
 
 
 #[test]
 fn test_hiragana_vowel_inputs() {
-    assert_eq!("あえいおう", to_hiragana("aeiou")); 
+    assert_eq!("あえいおう", to_hiragana("aeiou").unwrap()); 
 }
 
 #[test]
 fn test_hiragana_capital_vowel_inputs() {
-    assert_eq!("おう", to_hiragana("OU"));
+    assert_eq!("おう", to_hiragana("OU").unwrap());
 }
 
 #[test]
 fn test_hiragana_open_syllables() {
-    assert_eq!("きつね", to_hiragana("kitsune"));
+    assert_eq!("きつね", to_hiragana("kitsune").unwrap());
 }
 
 #[test]
 fn test_hiragana_capital_open_syllables() {
-    assert_eq!("きつね", to_hiragana("KiTsuNE"));
+    assert_eq!("きつね", to_hiragana("KiTsuNE").unwrap());
 }
 
 #[test]
 fn test_hiragana_closed_final_syllable() {
-    assert_eq!("ごおん", to_hiragana("goon"));
+    assert_eq!("ごおん", to_hiragana("goon").unwrap());
 }
 
 #[test]
 fn test_hiragana_closed_syllables() {
-    assert_eq!("はんど", to_hiragana("hando"));
+    assert_eq!("はんど", to_hiragana("hando").unwrap());
 }
 
 #[test]
 fn test_hiragana_geminates() {
-    assert_eq!("がっこう", to_hiragana("gakkou"));
+    assert_eq!("がっこう", to_hiragana("gakkou").unwrap());
 }
 
 #[test]
-fn test_multiple_words_with_whitespace(){
-    assert_eq!("おはよう ございます !", to_hiragana("ohayou gozaimasu !"));
+fn test_hiragana_multiple_words_with_whitespace() {
+    assert_eq!("おはよう ございます !", to_hiragana("ohayou gozaimasu !").unwrap());
 }
 
 #[test]
-fn test_hiragana_digraphs(){
-    assert_eq!("がっこう で いっしょうに", to_hiragana("gakkou de isshouni"));
+fn test_hiragana_digraphs() {
+    assert_eq!("がっこう で いっしょうに", to_hiragana("gakkou de isshouni").unwrap());
+}
+
+#[test]
+fn test_katakana_vowel_inputs() {
+    assert_eq!("アエイオウ", to_katakana("aeiou").unwrap());
+}
+
+#[test]
+fn test_katakana_capital_vowel_inputs() {
+    assert_eq!("オウ", to_katakana("OU").unwrap());
+}
+
+#[test]
+fn test_katakana_open_syllables() {
+    assert_eq!("キツネ", to_katakana("kitsune").unwrap());
+}
+
+#[test]
+fn test_katakana_capital_open_syllables() {
+    assert_eq!("キツネ", to_katakana("KItsUNe").unwrap());
+}
+
+#[test]
+fn test_katakana_closed_final_syllable() {
+    assert_eq!("ハンド", to_katakana("hando").unwrap());
+}
+
+#[test]
+fn test_katakana_geminates() {
+    assert_eq!("ガッコウ", to_katakana("gakkou").unwrap());
+}
+
+#[test]
+fn test_katakana_multiple_words_with_whitespace() {
+    assert_eq!("オハヨウ ゴザイマス !", to_katakana("ohayou gozaimasu !").unwrap());
+}
+
+#[test]
+fn test_katakana_digraphs() {
+    assert_eq!("ガッコウ デ イッショウニ", to_katakana("gakkou de isshouni").unwrap());
+}
+
+#[test]
+fn test_katakana_long_vowel() {
+    assert_eq!("オーキーナ チャーハン", to_katakana("ookiina chaahan").unwrap());
 }
