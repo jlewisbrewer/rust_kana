@@ -591,6 +591,94 @@ mod to_kana {
     }
 }
 
+use std::fs::File;
+use std::io::{BufRead,BufReader};
+
+/// Make map from CMU phones into japanese-like phones.
+/// The CMU phones list has been edited to include
+/// the japanese-like phones.
+/// 
+/// Takes a file of whitespace-delineated key/value
+/// pairs separated in lines and creates a HashMap.
+fn make_jap_map() -> HashMap<String, String> {
+    let mut phones = HashMap::new();
+    let file = File::open("cmuphones.txt".to_string())
+                    .expect("file not found: cmuphones.txt");
+    for line in BufReader::new(file).lines() {
+        let next = line.unwrap();
+        let substrings: Vec<&str> = next
+                            .split_whitespace()
+                            .take(2)
+                            .collect();
+        phones.insert(substrings[0].to_string()
+                     ,substrings[1].to_string());
+
+    }
+    phones
+}
+
+/// Make hashmap from CMU phones to Japanese phones.
+/// The Carnegie Mellon University phonetic dictionary
+/// was downloaded, and non-alphabetic keys were deleted.
+fn make_cmu_map() -> HashMap<String, String> {
+    let mut phones = HashMap::new();
+    let file = File::open("cmudict-0.7b.txt".to_string())
+                    .expect("file not found cmudict-0.7b.txt");
+    for line in BufReader::new(file).lines() {
+        let next = line.unwrap();
+        let substrings: Vec<&str> = next.splitn(2,' ')
+                                        .collect();
+
+        let head = substrings[0].to_string();
+        let tail = substrings[1].to_string();
+
+       
+        phones.insert(head,tail);
+
+    }
+    phones
+}
+
+
+/// Take english word, get cmu phones, return japanese-ready phones.
+/// These phones should be easily parsed by katakana/hiragana function.
+fn eng_to_jap(word: &str,
+        cmu_map: & HashMap<String, String>,
+        jap_map: & HashMap<String, String>)
+        -> Vec<String> {
+
+    let mut out = Vec::new();
+    let mut eng_phones: Vec<&str> = 
+                        cmu_map.get(&word.to_uppercase())
+                               .expect("not found in cmu")
+                               .split_whitespace()
+                               .collect()
+                               ;
+    for mut phone in &mut eng_phones {
+        // Remove stress markers. (Numbers)
+        let mut has_stress = false;
+        for character in phone.chars() {
+            if character.is_alphabetic() == false {
+                has_stress = true;
+            }
+        }
+
+        let mut phonestring = phone.to_string();
+        if has_stress == true {
+            // Stress marker is always at end.
+            phonestring.pop();
+        }
+        
+        out.push(jap_map.get(phonestring.as_str())
+                        .expect("not in japanese-ready dictionary")
+                        .to_string());
+    }
+    out
+}
+
+
+
+
 #[macro_use]
 extern crate lazy_static; // 1.0.2
 
@@ -715,5 +803,22 @@ fn test_katakana_long_vowel() {
     assert_eq!(
         "オーキーナ チャーハン",
         to_katakana("ookiina chaahan").unwrap()
+    );
+}
+
+#[test]
+fn cmu_dict_tests() {
+    let cmumap = make_cmu_map();
+    let japmap = make_jap_map();
+    
+    assert_eq!(
+        eng_to_jap("AARON", &cmumap, &japmap),
+        vec![
+            "EH1".to_string(),
+            "R".to_string(), 
+            "AH0".to_string(), 
+            "N".to_string(),
+        ],
+        "AARON failed."
     );
 }
