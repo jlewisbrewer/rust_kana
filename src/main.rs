@@ -678,7 +678,20 @@ fn eng_to_jap(word: &str,
     out
 }
 
+/// Full process functions, from english->CMU->japanese
+fn cmu_hiragana(word: &str) -> String {
+    let cmu = make_cmu_map();
+    let jap = make_jap_map();
+    let temp: String = eng_to_jap(word,&cmu,&jap).join("");
+    to_hiragana(temp.as_str()).expect("to_hiragana from cmu_hiragana failed")
+}
 
+fn cmu_katakana(word: &str) -> String {
+    let cmu = make_cmu_map();
+    let jap = make_jap_map();
+    let temp: String = eng_to_jap(word,&cmu,&jap).join("");
+    to_katakana(temp.as_str()).expect("to_katakana from cmu_katakana failed")
+}
 
 
 #[macro_use]
@@ -699,27 +712,24 @@ fn main() {
     match option.as_str() {
         "hiragana" => println!("{}", to_hiragana(&args[2]).unwrap()),
         "katakana" => println!("{}", to_katakana(&args[2]).unwrap()),
-        "cmu_hiragana"   => {
-                            let cmu = make_cmu_map();
-                            let jap = make_jap_map();
-                            let temp: String = eng_to_jap(&args[2],&cmu,&jap).join("");
-                            println!("{}",to_hiragana(temp.as_str()).unwrap());
-                            },
-        "cmu_katakana"   => {
-                            let cmu = make_cmu_map();
-                            let jap = make_jap_map();
-                            let temp: String = eng_to_jap(&args[2],&cmu,&jap).join("");
-                            println!("{}",to_katakana(temp.as_str()).unwrap());
-                            },
+        "cmu_hiragana"   => println!("{}",cmu_hiragana(&args[2])),
+        "cmu_katakana"   => println!("{}",cmu_katakana(&args[2])),
         _ => println!("Incorrect command line argument, please see README for details."),
     }
 }
 
-/*
+
+/// TESTS
+
 #[test]
-fn cmu_hiragana() {
-    assert_eq!("ごおん", to_hiragana("goon").unwrap()
-*/
+fn cmu_katakana_test() {
+    assert_eq!("エラン", cmu_katakana("aaron"));
+}
+
+#[test]
+fn cmu_hiragana_test() {
+    assert_eq!("がべん", cmu_hiragana("Gavin"));
+}
 
 #[test]
 fn test_hiragana_vowel_inputs() {
