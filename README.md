@@ -1,6 +1,7 @@
 #  Rust Kana Transliterator
 
 This project transliterates English words into Japanese characters.
+Open source license.
 
 Support for transliterating into both hiragana and katakana is included.
 
