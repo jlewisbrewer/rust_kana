@@ -699,9 +699,27 @@ fn main() {
     match option.as_str() {
         "hiragana" => println!("{}", to_hiragana(&args[2]).unwrap()),
         "katakana" => println!("{}", to_katakana(&args[2]).unwrap()),
+        "cmu_hiragana"   => {
+                            let cmu = make_cmu_map();
+                            let jap = make_jap_map();
+                            let temp: String = eng_to_jap(&args[2],&cmu,&jap).join("");
+                            println!("{}",to_hiragana(temp.as_str()).unwrap());
+                            },
+        "cmu_katakana"   => {
+                            let cmu = make_cmu_map();
+                            let jap = make_jap_map();
+                            let temp: String = eng_to_jap(&args[2],&cmu,&jap).join("");
+                            println!("{}",to_katakana(temp.as_str()).unwrap());
+                            },
         _ => println!("Incorrect command line argument, please see README for details."),
     }
 }
+
+/*
+#[test]
+fn cmu_hiragana() {
+    assert_eq!("ごおん", to_hiragana("goon").unwrap()
+*/
 
 #[test]
 fn test_hiragana_vowel_inputs() {
