@@ -593,6 +593,7 @@ mod to_kana {
 
 use std::fs::File;
 use std::io::{BufRead,BufReader};
+use std::collections::HashMap;
 
 /// Make map from CMU phones into japanese-like phones.
 /// The CMU phones list has been edited to include
@@ -605,7 +606,7 @@ fn make_jap_map() -> HashMap<String, String> {
     let file = File::open("cmuphones.txt".to_string())
                     .expect("file not found: cmuphones.txt");
     for line in BufReader::new(file).lines() {
-        let next = line.unwrap();
+        let next = line.expect("out of lines MJM");
         let substrings: Vec<&str> = next
                             .split_whitespace()
                             .take(2)
@@ -624,8 +625,9 @@ fn make_cmu_map() -> HashMap<String, String> {
     let mut phones = HashMap::new();
     let file = File::open("cmudict-0.7b.txt".to_string())
                     .expect("file not found cmudict-0.7b.txt");
-    for line in BufReader::new(file).lines() {
-        let next = line.unwrap();
+    let mut reader = BufReader::new(file).lines();
+    while let Some(line) = reader.next() {
+        let next = line.expect("out of lines MCM");
         let substrings: Vec<&str> = next.splitn(2,' ')
                                         .collect();
 
@@ -814,9 +816,9 @@ fn cmu_dict_tests() {
     assert_eq!(
         eng_to_jap("AARON", &cmumap, &japmap),
         vec![
-            "EH1".to_string(),
+            "E".to_string(),
             "R".to_string(), 
-            "AH0".to_string(), 
+            "A".to_string(), 
             "N".to_string(),
         ],
         "AARON failed."
