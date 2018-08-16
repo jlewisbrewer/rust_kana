@@ -63,6 +63,8 @@ mod to_kana {
         syllabary.push("n".to_string());
         // This is the flag for gemination
         syllabary.push("G".to_string());
+        // This is a digraph used in mostly foreign words
+        syllabary.push("je".to_string());
 
         // There are a number of syllables that are transcribed differently by
         // convention. This loop is designed to find their phonemic representations
@@ -223,6 +225,8 @@ mod to_kana {
             "\u{3093}",
             // small tsu for geminates
             "\u{3063}",
+            // foreign digraph
+            "\u{3058}\u{3047}",
         ];
 
         unicodekeys
@@ -370,6 +374,8 @@ mod to_kana {
             "\u{30F3}",
             // small tsu for geminates
             "\u{30C3}",
+            // foreign digraph
+            "\u{30B8}\u{30A7}",
             // choonpu for long vowels
             "\u{30FC}",
         ];
@@ -398,7 +404,7 @@ mod to_kana {
         hiragana_table.remove("ye");
         hiragana_table.remove("wu");
 
-        //TEST
+        // Additional mappings to correspond with English consonants
         hiragana_table.insert("b".to_string(), "\u{3076}".to_string());
         hiragana_table.insert("ch".to_string(), "\u{3061}".to_string());
         hiragana_table.insert("d".to_string(), "\u{3069}".to_string());
@@ -419,7 +425,6 @@ mod to_kana {
         hiragana_table.insert("hu".to_string(), "\u{3075}".to_string());
         hiragana_table.insert("zi".to_string(), "\u{3058}".to_string());
         hiragana_table.insert("m".to_string(), "\u{3080}".to_string());
-
 
         
 
@@ -451,7 +456,7 @@ mod to_kana {
         katakana_table.remove("ye");
         katakana_table.remove("wu");
 
-         //TEST
+         // Additional mappings that correspond to English consonants
         katakana_table.insert("b".to_string(), "\u{30D6}".to_string());
         katakana_table.insert("ch".to_string(), "\u{30C1}".to_string());
         katakana_table.insert("d".to_string(), "\u{30C9}".to_string());
@@ -472,7 +477,6 @@ mod to_kana {
         katakana_table.insert("hu".to_string(), "\u{30D5}".to_string());
         katakana_table.insert("zi".to_string(), "\u{30B8}".to_string());
         katakana_table.insert("m".to_string(), "\u{30E0}".to_string());
-   
 
 
         katakana_table
@@ -502,12 +506,17 @@ mod to_kana {
     /// #Arguments
     ///
     /// * `input` - A str slice that needs to be parsed into Japanese syllables
+    /// * `is_eng` - A boolean value that determines whether or not the input is
+    ///               an english word
     ///
     /// # Example
     ///
     /// ```
     /// let test_input = "toto";
-    /// assert_eq!(to_japanese_syllables(test_input), "["to", "to"]);
+    /// assert_eq!(to_japanese_syllables(test_input, false), "["to", "to"]);
+    /// 
+    /// let test input = "grab";
+    /// assert_eq!(to_japanese_syllables(test_input, true), "["g", "ra", "b"]);
     /// ```
     ///
     fn to_japanese_syllables(input: &str, is_eng: bool) -> Vec<String> {
@@ -625,6 +634,7 @@ mod to_kana {
     /// # Arguments
     ///
     /// * `input` - A string slice that will be converted to hiragana
+    /// * `is_eng` - A boolean value that is set if the input origin is from English
     ///
     ///  # Examples
     ///
@@ -658,6 +668,7 @@ mod to_kana {
     /// # Arguments
     ///
     /// * `input` - A string slice that will be converted to katakana
+    /// * `is_eng` - A boolean value that is set if the input origin is English
     ///
     ///  # Examples
     ///
@@ -694,6 +705,13 @@ mod to_kana {
         Ok(output)
     }
 
+    /// Returns a result that gives a string output of Latin 1 characters
+    /// from hiragana input on success
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - A string slice in hiragana
+    ///
     pub fn to_roomaji_hiragana(input: &str)-> Result<String, String> {
         let mut output = "".to_string();
 
@@ -709,6 +727,13 @@ mod to_kana {
         Ok(output)
     }
 
+    /// Returns a result that gives a string output of Latin 1 characters
+    /// from katakana input on success
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - A string slice in katakana
+    ///
     pub fn to_roomaji_katakana(input: &str)-> Result<String, String> {
         let mut output = "".to_string();
         
@@ -852,12 +877,13 @@ fn main() {
         println!("Incorrect number of command line arguemnts, please type README in command line for details");
         process::exit(1);
     }
+
     let option = &args[1];
     match option.as_str() {
-        "hiragana" => println!("{}", to_hiragana(&args[2], false).unwrap()),
-        "katakana" => println!("{}", to_katakana(&args[2], false).unwrap()),
-        "roomaji_hiragana" => println!("{}", to_roomaji_hiragana(&args[2]).unwrap()),
-        "roomaji_katakana" => println!("{}", to_roomaji_katakana(&args[2]).unwrap()),
+        "hiragana" => println!("{}", to_hiragana(&args[2], false).expect("Unable to parse input")),
+        "katakana" => println!("{}", to_katakana(&args[2], false).expect("Unable to parse input")),
+        "roomaji_hiragana" => println!("{}", to_roomaji_hiragana(&args[2]).expect("Unable to parse input")),
+        "roomaji_katakana" => println!("{}", to_roomaji_katakana(&args[2]).expect("Unable to parse input")),
         "cmu_hiragana"   => println!("{}",cmu_hiragana(&args[2])),
         "cmu_katakana"   => println!("{}",cmu_katakana(&args[2])),
         _ => println!("Incorrect command line argument, please see README for details."),
