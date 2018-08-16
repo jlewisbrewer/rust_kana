@@ -711,14 +711,24 @@ mod to_kana {
 
     pub fn to_roomaji_katakana(input: &str)-> Result<String, String> {
         let mut output = "".to_string();
-
+        
+        let mut last_vowel = ' ';
+        let choonpu = "\u{30FC}";   
         for c in input.chars(){
             let mut temp = c.to_string();
-            let result = ROOMAJI_KATAKANA.get(&temp);
+            let result;
+            if temp == choonpu {
+                result = ROOMAJI_KATAKANA.get(&*last_vowel.to_string());
+                 
+            } else {
+            result = ROOMAJI_KATAKANA.get(&temp);
+            }
             match result {
                 Some(_) => output.push_str(result.unwrap()),
                 None => return Err("Unable to parse input".to_string()),
             }
+            last_vowel = c;
+        
         }
 
         Ok(output)
