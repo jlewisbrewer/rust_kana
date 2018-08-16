@@ -82,6 +82,7 @@ rasuto
 **romaji_katakana**
 
 This option will take a Japanese katakana string and will out it as Latin 1 unicode.
+
 Example:
 ```
 cargo run roomaji_katakana ラスト
