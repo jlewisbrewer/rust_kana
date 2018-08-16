@@ -718,23 +718,43 @@ mod to_kana {
         let mut last_char = ' ';
         // This value is for the small tsu used to mark geminates
         let geminate = '\u{3063}';
+        // These are vowels used in the formation of digraphs
+        let digraph_vowels = ['\u{3083}', 'a' , '\u{3085}', 'u', '\u{3087}', 'o', 
+        '\u{3047}', 'e'];
+        // These kana are romanized atypically from other digraph consonants
+        let digraph_sibilants = ['\u{3057}', '\u{3058}', '\u{3061}'];
+        
         for c in input.chars(){
-            let mut temp = c.to_string();
-            let result = ROOMAJI_HIRAGANA.get(&temp);
-            
-            if last_char == geminate {
+            if !c.is_alphabetic(){
+                output.push(c);
+            } else if digraph_vowels.contains(&c) {
                 output.pop();
-                let first_char = result.unwrap().chars().next().unwrap();
-                output.push(first_char);
-            }
-            match result {
-                Some(_) => output.push_str(result.unwrap()),
-                None => return Err("Unable to parse input".to_string()),
-            }
-            last_char = c;
-        }
 
+                if !digraph_sibilants.contains(&last_char) {
+                    output.push('y');
+                }
+                let index = digraph_vowels.into_iter().position(|x| x == &c).unwrap();
+                output.push(digraph_vowels[index + 1]);
+                
+            } else {
+                let mut temp = c.to_string();
+                let result = ROOMAJI_HIRAGANA.get(&temp);
+            
+                if last_char == geminate {
+                    output.pop();
+                    let first_char = result.unwrap().chars().next().unwrap();
+                    output.push(first_char);
+                }
+                match result {
+                    Some(_) => output.push_str(result.unwrap()),
+                    None => return Err("Unable to parse input".to_string()),
+                }
+                last_char = c;
+            }
+        }
+    
         Ok(output)
+        
     }
 
     /// Returns a result that gives a string output of Latin 1 characters
@@ -751,31 +771,62 @@ mod to_kana {
         // This value is for the small tsu used to mark geminates
         let geminate = '\u{30C3}';
         // This value is the long vowel marker used in katakana
-        let choonpu = "\u{30FC}";   
-        for c in input.chars(){
-            let mut temp = c.to_string();
-            let mut result = ROOMAJI_KATAKANA.get(&temp);
-            if last_char == geminate {
-                output.pop();
-                let first_char = result.unwrap().chars().next().unwrap();
-                output.push(first_char);
-            }
-            if temp == choonpu {
-                result = ROOMAJI_KATAKANA.get(&*last_char.to_string());
-                 
-            }
-            match result {
-                Some(_) => output.push_str(result.unwrap()),
-                None => return Err("Unable to parse input".to_string()),
-            }
-            last_char = c;
+        let choonpu = "\u{30FC}";
+        // These are vowels used in the formation of digraphs
+        let digraph_vowels = ['\u{30E3}', 'a' , '\u{30E5}', 'u', '\u{30E7}', 'o', 
+        '\u{30A7}', 'e'];
+        // These kana are romanized atypically from other digraph consonants
+        let digraph_sibilants = ['\u{30B7}', '\u{30B8}', '\u{30C1}'];
         
+        for c in input.chars(){
+            if !c.is_alphabetic(){
+                output.push(c);
+            } else if digraph_vowels.contains(&c) {
+                output.pop();
+
+                if !digraph_sibilants.contains(&last_char) {
+                    output.push('y');
+                }
+                let index = digraph_vowels.into_iter().position(|x| x == &c).unwrap();
+                output.push(digraph_vowels[index + 1]);
+                
+            } else if c.to_string() == choonpu {
+                let last_char = output.chars().last().unwrap();
+                output.push(last_char);
+                 
+            } else {
+                let mut temp = c.to_string();
+                let mut result = ROOMAJI_KATAKANA.get(&temp);
+                if temp == choonpu {
+                    result = ROOMAJI_KATAKANA.get(&*last_char.to_string());
+                    let last_char = result.unwrap().chars().last().unwrap();
+                    output.push(last_char);
+                 
+                } else {
+                if last_char == geminate {
+                    output.pop();
+                    let first_char = result.unwrap().chars().next().unwrap();
+                    output.push(first_char);
+                }
+                match result {
+                    Some(_) => output.push_str(result.unwrap()),
+                    None => return Err("Unable to parse input".to_string()),
+                }
+                }
+                last_char = c;
+            }
         }
 
         Ok(output)
     }
 }
 
+#[macro_use]
+extern crate lazy_static; // 1.0.2
+
+use std::env;
+use std::process;
+use to_kana::*;
 use std::fs::File;
 use std::io::{BufRead,BufReader};
 use std::collections::HashMap;
@@ -878,13 +929,6 @@ fn cmu_katakana(word: &str) -> String {
     to_katakana(temp.as_str(), true).expect("to_katakana from cmu_katakana failed")
 }
 
-
-#[macro_use]
-extern crate lazy_static; // 1.0.2
-
-use std::env;
-use std::process;
-use to_kana::*;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -1023,6 +1067,57 @@ fn test_katakana_long_vowel() {
         to_katakana("ookiina chaahan", false).unwrap()
     );
 }
+
+#[test]
+fn test_roomaji_hiragana_open_syllable() {
+    assert_eq!("kitsune", to_roomaji_hiragana("きつね").unwrap());
+}
+
+#[test]
+fn test_roomaji_hiragana_closed_syllable() {
+    assert_eq!("hando", to_roomaji_hiragana("はんど").unwrap());
+}
+
+#[test]
+fn test_roomaji_hiragana_geminates() {
+    assert_eq!("gakkou", to_roomaji_hiragana("がっこう").unwrap());
+}
+
+#[test]
+fn test_roomaji_hiragana_multiple_words_with_whitespace() {
+    assert_eq!("mai neemu isu maiku", to_roomaji_hiragana("まい ねえむ いす まいく").unwrap());
+}
+
+#[test]
+fn test_roomaji_hiragana_digraphs() {
+    assert_eq!("jon myuu", to_roomaji_hiragana("じょん みゅう").unwrap());
+}
+
+#[test]
+fn test_roomaji_katakana_open_syllable() {
+    assert_eq!("kitsune", to_roomaji_katakana("キツネ").unwrap());
+}
+
+#[test]
+fn test_roomaji_katakana_closed_syllable() {
+    assert_eq!("hando", to_roomaji_katakana("ハンド").unwrap());
+}
+
+#[test]
+fn test_roomaji_katakana_geminates() {
+    assert_eq!("gakkou", to_roomaji_katakana("ガッコウ").unwrap());
+}
+
+#[test]
+fn test_roomaji_katakana_multiple_words_with_whitespace() {
+    assert_eq!("mai neemu isu maiku", to_roomaji_katakana("マイ ネーム イス マイク").unwrap());
+}
+
+#[test]
+fn test_roomaji_katakana_digraphs() {
+    assert_eq!("jon myuu", to_roomaji_katakana("ジョン ミュー").unwrap());
+}
+
 
 #[test]
 fn cmu_dict_tests() {
