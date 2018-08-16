@@ -1,5 +1,5 @@
-AA	A     
-AA	D
+AA	AA     
+AA	AA
 AE	A
 AH	A
 AO	A
@@ -12,7 +12,7 @@ DH	Z
 EH	E
 ER	ERU
 EY	EI
-F 	F
+F 	H
 G 	G
 HH	H
 IH	E
@@ -34,7 +34,7 @@ TH	T
 UH	U
 UW	U
 V 	B
-W 	U
+W 	W
 Y 	I
 Z 	Z
 ZH	SH

@@ -23,6 +23,11 @@ mod to_kana {
     lazy_static! {
         static ref HIRAGANA: HashMap<String, String> = { initialize_hiragana() };
         static ref KATAKANA: HashMap<String, String> = { initialize_katakana() };
+        static ref ROOMAJI_HIRAGANA: HashMap<String, String> = { initilize_roomaji(initialize_hiragana_keys) };
+        static ref ROOMAJI_KATAKANA: HashMap<String, String> = { initilize_roomaji(initialize_katakana_keys) };
+        static ref HIRAGANA_KEYS: Vec<&'static str> = { initialize_hiragana_keys() };
+        static ref KATAKANA_KEYS: Vec<&'static str> = { initialize_katakana_keys() };
+
     }
 
     /// Returns a vector of strings that represent Japanese syllables
@@ -57,7 +62,7 @@ mod to_kana {
         // Final n
         syllabary.push("n".to_string());
         // This is the flag for gemination
-        syllabary.push("g".to_string());
+        syllabary.push("G".to_string());
 
         // There are a number of syllables that are transcribed differently by
         // convention. This loop is designed to find their phonemic representations
@@ -77,14 +82,9 @@ mod to_kana {
         syllabary
     }
 
-    /// Returns a hashmap of Latin 1 strings as keys and Japanese
-    /// hiragana strings as values.
-    fn initialize_hiragana() -> HashMap<String, String> {
-        let mut hiragana_table = HashMap::new();
-
-        let syllabary = initialize_japanese_syllables();
-
-        let unicodekeys = [
+    /// Returns an array of unicode strings to represent hiragana
+    fn initialize_hiragana_keys() -> Vec<&'static str> {
+        let unicodekeys = vec![
             // vowels
             "\u{3042}",
             "\u{3044}",
@@ -225,36 +225,13 @@ mod to_kana {
             "\u{3063}",
         ];
 
-        let mut u_iter = unicodekeys.iter();
-        let mut s_iter = syllabary.iter();
-        for _s in &syllabary {
-            hiragana_table.insert(
-                s_iter.next().unwrap().to_string(),
-                u_iter.next().unwrap().to_string(),
-            );
-        }
-
-        // These syllables are phonologically possible but do not have associated kana.
-        hiragana_table.remove("yi");
-        hiragana_table.remove("ye");
-        hiragana_table.remove("wu");
-
-        hiragana_table
+        unicodekeys
     }
-
-    /// Returns a hashmap of Latin 1 strings as keys and Japanese
-    /// katakana strings as values.
-    fn initialize_katakana() -> HashMap<String, String> {
-        let mut katakana_table = HashMap::new();
-
-        let mut syllabary = initialize_japanese_syllables();
-
-        // This value is used to represent long vowels in order to map to the katakana
-        // choonpu kana.
-        syllabary.push("l".to_string());
-
+    
+    /// Returns a vector of katakana unicode string slices used in building the hashmap
+    fn initialize_katakana_keys() -> Vec<&'static str> {
         // A listing of the unicode values for katakana
-        let unicodekeys = [
+        let unicodekeys = vec![
             // vowels
             "\u{30A2}",
             "\u{30A4}",
@@ -321,7 +298,7 @@ mod to_kana {
             "\u{30D7}",
             "\u{30DA}",
             "\u{30DD}",
-            // bilabila nasal
+            // bilabial nasal
             "\u{30DE}",
             "\u{30DF}",
             "\u{30E0}",
@@ -397,7 +374,70 @@ mod to_kana {
             "\u{30FC}",
         ];
 
-        let mut u_iter = unicodekeys.iter();
+        unicodekeys 
+    }
+
+    /// Returns a hashmap of Latin 1 strings as keys and Japanese
+    /// hiragana strings as values.
+    fn initialize_hiragana() -> HashMap<String, String> {
+        let mut hiragana_table = HashMap::new();
+
+        let syllabary = initialize_japanese_syllables();
+
+        let mut u_iter = HIRAGANA_KEYS.iter();
+        let mut s_iter = syllabary.iter();
+        for _s in &syllabary {
+            hiragana_table.insert(
+                s_iter.next().unwrap().to_string(),
+                u_iter.next().unwrap().to_string(),
+            );
+        }
+
+        // These syllables are phonologically possible but do not have associated kana.
+        hiragana_table.remove("yi");
+        hiragana_table.remove("ye");
+        hiragana_table.remove("wu");
+
+        //TEST
+        hiragana_table.insert("b".to_string(), "\u{3076}".to_string());
+        hiragana_table.insert("ch".to_string(), "\u{3061}".to_string());
+        hiragana_table.insert("d".to_string(), "\u{3069}".to_string());
+        hiragana_table.insert("z".to_string(), "\u{3058}".to_string());
+        hiragana_table.insert("f".to_string(), "\u{3075}".to_string());
+        hiragana_table.insert("g".to_string(), "\u{3050}".to_string());
+        hiragana_table.insert("h".to_string(), "\u{3075}".to_string());
+        hiragana_table.insert("j".to_string(), "\u{3058}".to_string());
+        hiragana_table.insert("k".to_string(), "\u{304F}".to_string());
+        hiragana_table.insert("r".to_string(), "\u{308B}".to_string());
+        hiragana_table.insert("p".to_string(), "\u{307D}".to_string());
+        hiragana_table.insert("s".to_string(), "\u{3059}".to_string());
+        hiragana_table.insert("sh".to_string(), "\u{3057}".to_string());
+        hiragana_table.insert("t".to_string(), "\u{3068}".to_string());
+        hiragana_table.insert("si".to_string(), "\u{3057}".to_string());
+        hiragana_table.insert("ti".to_string(), "\u{3061}".to_string());
+        hiragana_table.insert("tu".to_string(), "\u{3064}".to_string());
+        hiragana_table.insert("hu".to_string(), "\u{3075}".to_string());
+        hiragana_table.insert("zi".to_string(), "\u{3058}".to_string());
+        hiragana_table.insert("m".to_string(), "\u{3080}".to_string());
+
+
+        
+
+        hiragana_table
+    }
+
+    /// Returns a hashmap of Latin 1 strings as keys and Japanese
+    /// katakana strings as values.
+    fn initialize_katakana() -> HashMap<String, String> {
+        let mut katakana_table = HashMap::new();
+
+        let mut syllabary = initialize_japanese_syllables();
+
+        // This value is used to represent long vowels in order to map to the katakana
+        // choonpu kana.
+        syllabary.push("L".to_string());
+
+        let mut u_iter = KATAKANA_KEYS.iter();
         let mut s_iter = syllabary.iter();
         for _s in &syllabary {
             katakana_table.insert(
@@ -411,7 +451,50 @@ mod to_kana {
         katakana_table.remove("ye");
         katakana_table.remove("wu");
 
+         //TEST
+        katakana_table.insert("b".to_string(), "\u{30D6}".to_string());
+        katakana_table.insert("ch".to_string(), "\u{30C1}".to_string());
+        katakana_table.insert("d".to_string(), "\u{30C9}".to_string());
+        katakana_table.insert("z".to_string(), "\u{30B8}".to_string());
+        katakana_table.insert("f".to_string(), "\u{30D5}".to_string());
+        katakana_table.insert("g".to_string(), "\u{30B0}".to_string());
+        katakana_table.insert("h".to_string(), "\u{30D5}".to_string());
+        katakana_table.insert("j".to_string(), "\u{30B8}".to_string());
+        katakana_table.insert("k".to_string(), "\u{30AF}".to_string());
+        katakana_table.insert("r".to_string(), "\u{30EB}".to_string());
+        katakana_table.insert("p".to_string(), "\u{30DD}".to_string());
+        katakana_table.insert("s".to_string(), "\u{30B9}".to_string());
+        katakana_table.insert("sh".to_string(), "\u{30B7}".to_string());
+        katakana_table.insert("t".to_string(), "\u{30C8}".to_string());
+        katakana_table.insert("si".to_string(), "\u{30B7}".to_string());
+        katakana_table.insert("ti".to_string(), "\u{30C1}".to_string());
+        katakana_table.insert("tu".to_string(), "\u{30C4}".to_string());
+        katakana_table.insert("hu".to_string(), "\u{30D5}".to_string());
+        katakana_table.insert("zi".to_string(), "\u{30B8}".to_string());
+        katakana_table.insert("m".to_string(), "\u{30E0}".to_string());
+   
+
+
         katakana_table
+    }
+
+    /// Returns a hashmap of kana characters to english syllables used for romanization
+    fn initilize_roomaji(initialize_kana : fn()-> Vec<&'static str>) -> HashMap<String, String> {
+        let mut roomaji_table = HashMap::new();
+        let kana_unicode = initialize_kana();
+        let syllabary = initialize_japanese_syllables();
+
+        let mut u_iter = kana_unicode.iter();
+        let mut s_iter = syllabary.iter();
+        for _s in &syllabary {
+            roomaji_table.insert(
+                u_iter.next().unwrap().to_string(),
+                s_iter.next().unwrap().to_string(),
+            );
+        }
+
+        roomaji_table
+
     }
 
     /// Returns a vector of strings where each string represents a Japanese syllable
@@ -427,7 +510,7 @@ mod to_kana {
     /// assert_eq!(to_japanese_syllables(test_input), "["to", "to"]);
     /// ```
     ///
-    fn to_japanese_syllables(input: &str) -> Vec<String> {
+    fn to_japanese_syllables(input: &str, is_eng: bool) -> Vec<String> {
         let input = input.to_lowercase();
 
         // This vector is used to store the syllables for the input string
@@ -444,6 +527,26 @@ mod to_kana {
         let mut prevnasal = false;
         let mut prevgeminate = false;
 
+         if is_eng {
+            let mut prevchar = 'a';
+
+            for c in input.chars(){
+                tempsyllable.push(c);
+                
+                if vowels.contains(&c){
+                    if !vowels.contains(&prevchar) {
+                        syllables.pop();
+                        tempsyllable.insert_str(0, &prevchar.to_string());
+                        }
+                    syllables.push(tempsyllable);
+                } else {
+                   syllables.push(c.to_string());
+                }
+                tempsyllable = "".to_string();
+                prevchar = c;
+
+            }
+        } else {
         for c in input.chars() {
             tempsyllable.push(c);
             tempdigraph.push(c);
@@ -483,7 +586,7 @@ mod to_kana {
 
                 if tempchar == c.to_string() {
                     tempsyllable = "".to_string();
-                    syllables.push("g".to_string());
+                    syllables.push("G".to_string());
                     tempsyllable.push(c);
                     prevgeminate = false;
                     continue;
@@ -513,6 +616,7 @@ mod to_kana {
                 tempdigraph.push(c);
             }
         }
+        }
         syllables
     }
 
@@ -529,9 +633,9 @@ mod to_kana {
     ///  assert_eq!(to_hiragana(input).unwrap(), "かな");
     ///  ````
     ///
-    pub fn to_hiragana(input: &str) -> Result<String, String> {
+    pub fn to_hiragana(input: &str, is_eng: bool) -> Result<String, String> {
         let mut output = "".to_string();
-        let syllables = to_japanese_syllables(input);
+        let syllables = to_japanese_syllables(input, is_eng);
         // After the syllables have been parsed, we can get the kana values for them
         for c in &syllables {
             let temp = c.to_string();
@@ -562,10 +666,10 @@ mod to_kana {
     ///  assert_eq!(to_katakana(input).unwrap(), "カナ");
     ///  ````
     ///
-    pub fn to_katakana(input: &str) -> Result<String, String> {
+    pub fn to_katakana(input: &str, is_eng: bool) -> Result<String, String> {
         let mut output = "".to_string();
 
-        let syllables = to_japanese_syllables(input);
+        let syllables = to_japanese_syllables(input, is_eng);
 
         let mut last_vowel = ' ';
         // After the syllables have been parsed, we can get the kana values for them
@@ -573,7 +677,7 @@ mod to_kana {
             let mut temp = c.to_string();
             if &last_vowel.to_string() == c {
                 // This retrieves the choonpu used for long vowels in katakana.
-                temp = "l".to_string();
+                temp = "L".to_string();
             }
 
             if !c.chars().next().unwrap().is_alphabetic() {
@@ -587,6 +691,36 @@ mod to_kana {
             }
             last_vowel = c.chars().last().unwrap();
         }
+        Ok(output)
+    }
+
+    pub fn to_roomaji_hiragana(input: &str)-> Result<String, String> {
+        let mut output = "".to_string();
+
+        for c in input.chars(){
+            let mut temp = c.to_string();
+            let result = ROOMAJI_HIRAGANA.get(&temp);
+            match result {
+                Some(_) => output.push_str(result.unwrap()),
+                None => return Err("Unable to parse input".to_string()),
+            }
+        }
+
+        Ok(output)
+    }
+
+    pub fn to_roomaji_katakana(input: &str)-> Result<String, String> {
+        let mut output = "".to_string();
+
+        for c in input.chars(){
+            let mut temp = c.to_string();
+            let result = ROOMAJI_KATAKANA.get(&temp);
+            match result {
+                Some(_) => output.push_str(result.unwrap()),
+                None => return Err("Unable to parse input".to_string()),
+            }
+        }
+
         Ok(output)
     }
 }
@@ -683,14 +817,14 @@ fn cmu_hiragana(word: &str) -> String {
     let cmu = make_cmu_map();
     let jap = make_jap_map();
     let temp: String = eng_to_jap(word,&cmu,&jap).join("");
-    to_hiragana(temp.as_str()).expect("to_hiragana from cmu_hiragana failed")
+    to_hiragana(temp.as_str(), true).expect("to_hiragana from cmu_hiragana failed")
 }
 
 fn cmu_katakana(word: &str) -> String {
     let cmu = make_cmu_map();
     let jap = make_jap_map();
     let temp: String = eng_to_jap(word,&cmu,&jap).join("");
-    to_katakana(temp.as_str()).expect("to_katakana from cmu_katakana failed")
+    to_katakana(temp.as_str(), true).expect("to_katakana from cmu_katakana failed")
 }
 
 
@@ -710,8 +844,10 @@ fn main() {
     }
     let option = &args[1];
     match option.as_str() {
-        "hiragana" => println!("{}", to_hiragana(&args[2]).unwrap()),
-        "katakana" => println!("{}", to_katakana(&args[2]).unwrap()),
+        "hiragana" => println!("{}", to_hiragana(&args[2], false).unwrap()),
+        "katakana" => println!("{}", to_katakana(&args[2], false).unwrap()),
+        "roomaji_hiragana" => println!("{}", to_roomaji_hiragana(&args[2]).unwrap()),
+        "roomaji_katakana" => println!("{}", to_roomaji_katakana(&args[2]).unwrap()),
         "cmu_hiragana"   => println!("{}",cmu_hiragana(&args[2])),
         "cmu_katakana"   => println!("{}",cmu_katakana(&args[2])),
         _ => println!("Incorrect command line argument, please see README for details."),
@@ -733,44 +869,44 @@ fn cmu_hiragana_test() {
 
 #[test]
 fn test_hiragana_vowel_inputs() {
-    assert_eq!("あえいおう", to_hiragana("aeiou").unwrap());
+    assert_eq!("あえいおう", to_hiragana("aeiou", false).unwrap());
 }
 
 #[test]
 fn test_hiragana_capital_vowel_inputs() {
-    assert_eq!("おう", to_hiragana("OU").unwrap());
+    assert_eq!("おう", to_hiragana("OU", false).unwrap());
 }
 
 #[test]
 fn test_hiragana_open_syllables() {
-    assert_eq!("きつね", to_hiragana("kitsune").unwrap());
+    assert_eq!("きつね", to_hiragana("kitsune", false).unwrap());
 }
 
 #[test]
 fn test_hiragana_capital_open_syllables() {
-    assert_eq!("きつね", to_hiragana("KiTsuNE").unwrap());
+    assert_eq!("きつね", to_hiragana("KiTsuNE", false).unwrap());
 }
 
 #[test]
 fn test_hiragana_closed_final_syllable() {
-    assert_eq!("ごおん", to_hiragana("goon").unwrap());
+    assert_eq!("ごおん", to_hiragana("goon", false).unwrap());
 }
 
 #[test]
 fn test_hiragana_closed_syllables() {
-    assert_eq!("はんど", to_hiragana("hando").unwrap());
+    assert_eq!("はんど", to_hiragana("hando", false).unwrap());
 }
 
 #[test]
 fn test_hiragana_geminates() {
-    assert_eq!("がっこう", to_hiragana("gakkou").unwrap());
+    assert_eq!("がっこう", to_hiragana("gakkou", false).unwrap());
 }
 
 #[test]
 fn test_hiragana_multiple_words_with_whitespace() {
     assert_eq!(
         "おはよう ございます !",
-        to_hiragana("ohayou gozaimasu !").unwrap()
+        to_hiragana("ohayou gozaimasu !", false).unwrap()
     );
 }
 
@@ -778,45 +914,45 @@ fn test_hiragana_multiple_words_with_whitespace() {
 fn test_hiragana_digraphs() {
     assert_eq!(
         "がっこう で いっしょうに",
-        to_hiragana("gakkou de isshouni").unwrap()
+        to_hiragana("gakkou de isshouni", false).unwrap()
     );
 }
 
 #[test]
 fn test_katakana_vowel_inputs() {
-    assert_eq!("アエイオウ", to_katakana("aeiou").unwrap());
+    assert_eq!("アエイオウ", to_katakana("aeiou", false).unwrap());
 }
 
 #[test]
 fn test_katakana_capital_vowel_inputs() {
-    assert_eq!("オウ", to_katakana("OU").unwrap());
+    assert_eq!("オウ", to_katakana("OU", false).unwrap());
 }
 
 #[test]
 fn test_katakana_open_syllables() {
-    assert_eq!("キツネ", to_katakana("kitsune").unwrap());
+    assert_eq!("キツネ", to_katakana("kitsune", false).unwrap());
 }
 
 #[test]
 fn test_katakana_capital_open_syllables() {
-    assert_eq!("キツネ", to_katakana("KItsUNe").unwrap());
+    assert_eq!("キツネ", to_katakana("KItsUNe", false).unwrap());
 }
 
 #[test]
 fn test_katakana_closed_final_syllable() {
-    assert_eq!("ハンド", to_katakana("hando").unwrap());
+    assert_eq!("ハンド", to_katakana("hando", false).unwrap());
 }
 
 #[test]
 fn test_katakana_geminates() {
-    assert_eq!("ガッコウ", to_katakana("gakkou").unwrap());
+    assert_eq!("ガッコウ", to_katakana("gakkou", false).unwrap());
 }
 
 #[test]
 fn test_katakana_multiple_words_with_whitespace() {
     assert_eq!(
         "オハヨウ ゴザイマス !",
-        to_katakana("ohayou gozaimasu !").unwrap()
+        to_katakana("ohayou gozaimasu !", false).unwrap()
     );
 }
 
@@ -824,7 +960,7 @@ fn test_katakana_multiple_words_with_whitespace() {
 fn test_katakana_digraphs() {
     assert_eq!(
         "ガッコウ デ イッショウニ",
-        to_katakana("gakkou de isshouni").unwrap()
+        to_katakana("gakkou de isshouni", false).unwrap()
     );
 }
 
@@ -832,7 +968,7 @@ fn test_katakana_digraphs() {
 fn test_katakana_long_vowel() {
     assert_eq!(
         "オーキーナ チャーハン",
-        to_katakana("ookiina chaahan").unwrap()
+        to_katakana("ookiina chaahan", false).unwrap()
     );
 }
 
