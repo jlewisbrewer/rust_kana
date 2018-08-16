@@ -18,10 +18,14 @@ This will output the input text in hiragana:
      Running `target/debug/to_kana hiragana gakkou`
 がっこう
 ```
-
+When an input contains whitespace, make sure to surround it with quotation marks:
+```
+cargo run katakana "       ka ta ka naaaaaaaaa "
+       カ タ カ ナーーーーーーーー
+```
 ## Options
 
-There are six options you could use.
+This program has six options.
 
 **hiragana**
 
@@ -36,12 +40,12 @@ When inputting a Japanese word, this program will accept modern Hepburn romaniza
   - Since the program can only accept ASCII input, long vowels will be doubled rather than using a macron. For instance *obāsan* 
   should be input as *obaasan*.
   - Geminates are input by repeating the doubled character in all cases. This differs from Hepburn romanization where まっちゃ is usually romanized as *matcha*. For this program use *maccha*.
-  - To resolve the abiguity of final -n (ん) and the initial ny- sound (as in *nya* にゃ), ny- digraphs should be input as nq-. For example:
+  - To resolve the abiguity of final -n (ん) and the initial ny- sound (as in *nya* にゃ), ny- digraphs should be input as nq-. All other digraphs will follow standards. For example:
 ``` 
-cargo run hiragana honya
-ほんや
-cargo run hiragana honqa
-ほにゃ
+cargo run hiragana "honya myuu jaa"
+ほんや みゅう じゃあ
+cargo run hiragana "honqa myuu jaa"
+ほにゃ みゅう じゃあ
 ```
 
 **katakana**
