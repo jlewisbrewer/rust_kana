@@ -686,7 +686,7 @@ mod to_kana {
         // After the syllables have been parsed, we can get the kana values for them
         for c in &syllables {
             let mut temp = c.to_string();
-            if &last_vowel.to_string() == c {
+            if &last_vowel.to_string() == c && last_vowel.is_alphabetic() {
                 // This retrieves the choonpu used for long vowels in katakana.
                 temp = "L".to_string();
             }
