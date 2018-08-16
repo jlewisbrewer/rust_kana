@@ -1,10 +1,10 @@
 #  Rust Kana Transliterator
 
-This project transliterates English and Japanese words into Japanese characters.
+This project transliterates English and Japanese words into Japanese characters, and can also take Japanese characters and output the corresponding romanization.
 
 Open source license.
 
-Support for transliterating into both hiragana and katakana is included.
+Support for transliterating into and from both hiragana and katakana is included.
 
 ## Usage
 
@@ -23,7 +23,7 @@ This will output the input text in hiragana:
 
 There are six options you could use.
 
-⋅⋅⋅**hiragana**
+**hiragana**
 
 This option expects a Japanese input string and will output a hiragana string. While the input does not necessarily need to be a Japanese word, it should still follow Japanese phonological rules.
 
@@ -60,7 +60,7 @@ cargo run cmu_hiragana "rust"
 
 Note that this option can only take one word at a time as an input.
 
-**cmu_katakana
+**cmu_katakana**
 
 This option functions the same as **cmu_hiragana** but will output a katakana string.
 
@@ -69,7 +69,7 @@ Example:
 cargo run cmu_katakana "rust"
 ラスト
 ```
-**roomaji_hiragana
+**roomaji_hiragana**
 
 This option will take a Japanese hiragana string and will output it as Latin 1 unicode. 
 
@@ -79,7 +79,7 @@ cargo run roomaji_hiragana らすと
 rasuto
 ```
 
-**romaji_katakana
+**romaji_katakana**
 
 This option will take a Japanese katakana string and will out it as Latin 1 unicode.
 Example:
