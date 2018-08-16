@@ -531,98 +531,98 @@ mod to_kana {
         // Possible digraphs
         let digraph = ["ky", "sh", "ch", "nq", "hy", "my", "ry", "gy", "by", "py"];
 
-        let mut tempsyllable = "".to_string();
-        let mut tempdigraph = "".to_string();
-        let mut prevnasal = false;
-        let mut prevgeminate = false;
+        let mut temp_syllable = "".to_string();
+        let mut temp_digraph = "".to_string();
+        let mut prev_nasal = false;
+        let mut prev_geminate = false;
 
          if is_eng {
             let mut prevchar = 'a';
 
             for c in input.chars(){
-                tempsyllable.push(c);
+                temp_syllable.push(c);
                 
                 if vowels.contains(&c){
                     if !vowels.contains(&prevchar) {
                         syllables.pop();
-                        tempsyllable.insert_str(0, &prevchar.to_string());
+                        temp_syllable.insert_str(0, &prevchar.to_string());
                         }
-                    syllables.push(tempsyllable);
+                    syllables.push(temp_syllable);
                 } else {
                    syllables.push(c.to_string());
                 }
-                tempsyllable = "".to_string();
+                temp_syllable = "".to_string();
                 prevchar = c;
 
             }
         } else {
         for c in input.chars() {
-            tempsyllable.push(c);
-            tempdigraph.push(c);
+            temp_syllable.push(c);
+            temp_digraph.push(c);
 
             // This check adds non-alphabetic chars to the syllable vector.
             if !c.is_alphabetic() {
-                prevnasal = false;
+                prev_nasal = false;
                 syllables.push(c.to_string());
-                tempsyllable = "".to_string();
+                temp_syllable = "".to_string();
             }
 
             // This checks to see if it's a digraph
-            if digraph.contains(&tempdigraph.as_str()) {
-                if prevgeminate {
+            if digraph.contains(&temp_digraph.as_str()) {
+                if prev_geminate {
                     syllables.pop();
                 }
-                if prevnasal {
+                if prev_nasal {
                     syllables.pop();
                 }
-                tempsyllable = "".to_string();
-                tempsyllable.push_str(&tempdigraph);
-                prevgeminate = false;
-                prevnasal = false;
+                temp_syllable = "".to_string();
+                temp_syllable.push_str(&temp_digraph);
+                prev_geminate = false;
+                prev_nasal = false;
             }
             // Japanese syllables can end in final -n, so it needs to be checked.
             if c == 'n' {
-                prevnasal = true;
+                prev_nasal = true;
                 syllables.push(c.to_string());
-            } else if !vowels.contains(&c) && prevnasal {
-                prevnasal = false;
-                tempsyllable = "".to_string();
-                tempsyllable.push(c);
+            } else if !vowels.contains(&c) && prev_nasal {
+                prev_nasal = false;
+                temp_syllable = "".to_string();
+                temp_syllable.push(c);
             }
             // This checks the geminate array and sets geminate flag to test for gemination.
-            if !vowels.contains(&c) && prevgeminate {
-                let tempchar = syllables.pop().unwrap();
+            if !vowels.contains(&c) && prev_geminate {
+                let temp_char = syllables.pop().unwrap();
 
-                if tempchar == c.to_string() {
-                    tempsyllable = "".to_string();
+                if temp_char == c.to_string() {
+                    temp_syllable = "".to_string();
                     syllables.push("G".to_string());
-                    tempsyllable.push(c);
-                    prevgeminate = false;
+                    temp_syllable.push(c);
+                    prev_geminate = false;
                     continue;
                 }
             }
             if geminates.contains(&c) {
-                prevgeminate = true;
+                prev_geminate = true;
                 syllables.push(c.to_string());
             }
 
             if vowels.contains(&c) {
-                if prevgeminate {
+                if prev_geminate {
                     syllables.pop();
                 }
 
-                if prevnasal {
+                if prev_nasal {
                     syllables.pop();
-                    prevnasal = false;
+                    prev_nasal = false;
                 }
-                prevgeminate = false;
-                syllables.push(tempsyllable);
-                tempsyllable = "".to_string();
+                prev_geminate = false;
+                syllables.push(temp_syllable);
+                temp_syllable = "".to_string();
             }
 
-            if tempdigraph.len() >= 2 {
-                tempdigraph = "".to_string();
-                tempdigraph.push(c);
+            if temp_digraph.len() >= 2 {
+                temp_digraph = "".to_string();
+                temp_digraph.push(c);
             }
         }
         }
