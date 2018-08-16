@@ -714,14 +714,24 @@ mod to_kana {
     ///
     pub fn to_roomaji_hiragana(input: &str)-> Result<String, String> {
         let mut output = "".to_string();
-
+        
+        let mut last_char = ' ';
+        // This value is for the small tsu used to mark geminates
+        let geminate = '\u{3063}';
         for c in input.chars(){
             let mut temp = c.to_string();
             let result = ROOMAJI_HIRAGANA.get(&temp);
+            
+            if last_char == geminate {
+                output.pop();
+                let first_char = result.unwrap().chars().next().unwrap();
+                output.push(first_char);
+            }
             match result {
                 Some(_) => output.push_str(result.unwrap()),
                 None => return Err("Unable to parse input".to_string()),
             }
+            last_char = c;
         }
 
         Ok(output)
@@ -737,22 +747,28 @@ mod to_kana {
     pub fn to_roomaji_katakana(input: &str)-> Result<String, String> {
         let mut output = "".to_string();
         
-        let mut last_vowel = ' ';
+        let mut last_char = ' ';
+        // This value is for the small tsu used to mark geminates
+        let geminate = '\u{30C3}';
+        // This value is the long vowel marker used in katakana
         let choonpu = "\u{30FC}";   
         for c in input.chars(){
             let mut temp = c.to_string();
-            let result;
+            let mut result = ROOMAJI_KATAKANA.get(&temp);
+            if last_char == geminate {
+                output.pop();
+                let first_char = result.unwrap().chars().next().unwrap();
+                output.push(first_char);
+            }
             if temp == choonpu {
-                result = ROOMAJI_KATAKANA.get(&*last_vowel.to_string());
+                result = ROOMAJI_KATAKANA.get(&*last_char.to_string());
                  
-            } else {
-            result = ROOMAJI_KATAKANA.get(&temp);
             }
             match result {
                 Some(_) => output.push_str(result.unwrap()),
                 None => return Err("Unable to parse input".to_string()),
             }
-            last_vowel = c;
+            last_char = c;
         
         }
 
