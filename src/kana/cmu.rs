@@ -101,3 +101,32 @@ pub fn cmu_katakana(word: &str) -> String {
     let temp: String = eng_to_jap(word,&cmu,&jap).join("");
     to_katakana(temp.as_str(), true).expect("to_katakana from cmu_katakana failed")
 }
+
+/// Tests
+
+#[test]
+fn cmu_katakana_test() {
+    assert_eq!("エラン", cmu_katakana("aaron"));
+}
+
+#[test]
+fn cmu_hiragana_test() {
+    assert_eq!("がべん", cmu_hiragana("Gavin"));
+}
+
+#[test]
+fn cmu_dict_tests() {
+    let cmumap = make_cmu_map();
+    let japmap = make_jap_map();
+    
+    assert_eq!(
+        eng_to_jap("AARON", &cmumap, &japmap),
+        vec![
+            "E".to_string(),
+            "R".to_string(), 
+            "A".to_string(), 
+            "N".to_string(),
+        ],
+        "AARON failed."
+    );
+}
